@@ -11,11 +11,8 @@ import kotlin.contracts.ExperimentalContracts
 // TODO configs from https://htmx.org/docs/#config
 
 
-
-
-
 @OptIn(ExperimentalContracts::class)
-inline fun <T: Tag> T.attributes(block: T.() -> Unit): T {
+inline fun <T : Tag> T.attributes(block: T.() -> Unit): T {
     kotlin.contracts.contract {
         callsInPlace(block, kotlin.contracts.InvocationKind.EXACTLY_ONCE)
     }
@@ -24,8 +21,16 @@ inline fun <T: Tag> T.attributes(block: T.() -> Unit): T {
 }
 
 
-data class User(val id: String, var firstName: String, var lastName: String, var email: String, val age: Int)
-var users: Map<String, User> = mutableMapOf("Fio" to User("Fio", "Thée", "Roncoletta", "fio@roncoletta.com", 24))
+data class User(
+    val id: String,
+    var firstName: String,
+    var lastName: String,
+    var email: String,
+    val age: Int
+)
+
+var users: Map<String, User> =
+    mutableMapOf("Fio" to User("Fio", "Thée", "Roncoletta", "fio@roncoletta.com", 24))
 
 
 private const val FIRST_NAME = "firstName"
@@ -33,15 +38,13 @@ private const val LAST_NAME = "lastName"
 private const val EMAIL = "email"
 
 
-
-
 fun Application.configureTemplating() {
     routing {
         get("/contact/{id}") {
             call.respondHtml {
-                head{
+                head {
                     script(src = "/assets/htmx.org/2.0.2/dist/htmx.min.js") {}
-                    link(rel = "stylesheet", href = "/assets/bootstrap/bootstrap.min.css" ) {}
+                    link(rel = "stylesheet", href = "/assets/bootstrap/bootstrap.min.css") {}
                 }
                 body {
                     val user = users[call.parameters["id"]]
@@ -50,7 +53,7 @@ fun Application.configureTemplating() {
             }
         }
 
-        htmxRequest{
+        htmxRequest {
             get("/contact/{id}/edit") {
                 call.respondFragment {
                     val user = users[call.parameters["id"]]
@@ -97,9 +100,9 @@ fun Application.configureTemplating() {
                 if (userId != null) {
                     val parameters = call.receiveParameters()
                     val user = users[userId]
-                    parameters[FIRST_NAME]?.apply {  user?.firstName = this}
-                    parameters[LAST_NAME]?.apply {  user?.lastName = this}
-                    parameters[EMAIL]?.apply {  user?.email = this}
+                    parameters[FIRST_NAME]?.apply { user?.firstName = this }
+                    parameters[LAST_NAME]?.apply { user?.lastName = this }
+                    parameters[EMAIL]?.apply { user?.email = this }
                 }
 
                 call.respondFragment {
@@ -136,6 +139,4 @@ private fun FlowContent.displayUserInfo(user: User?) {
             }
         }
 }
-
-fun Route.htmxRequest(build: Route.()->Unit): Route = header("HX-Request", "true", build)
 

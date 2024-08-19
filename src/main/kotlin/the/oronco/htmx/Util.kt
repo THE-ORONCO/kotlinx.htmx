@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.html.*
 import kotlinx.html.consumers.filter
 import kotlinx.html.stream.appendHTML
@@ -24,3 +25,5 @@ private class FRAGMENT(override val consumer: TagConsumer<*>) :
 @HtmlTagMarker
 private inline fun <T, C : TagConsumer<T>> C.fragment(crossinline block: FRAGMENT.() -> Unit = {}): T =
     FRAGMENT(this).visitAndFinalize(this, block)
+
+fun Route.htmxRequest(build: Route.()->Unit): Route = header("HX-Request", "true", build)
