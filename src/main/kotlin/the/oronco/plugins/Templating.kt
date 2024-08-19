@@ -47,8 +47,7 @@ fun Application.configureTemplating() {
                     link(rel = "stylesheet", href = "/assets/bootstrap/bootstrap.min.css") {}
                 }
                 body {
-                    val user = users[call.parameters["id"]]
-                    displayUserInfo(user)
+                    displayUserInfo(users[call.parameters["id"]])
                 }
             }
         }
@@ -57,41 +56,7 @@ fun Application.configureTemplating() {
             get("/contact/{id}/edit") {
                 call.respondFragment {
                     val user = users[call.parameters["id"]]
-                    if (user == null) div {} else
-                        form {
-                            hxPut = "/contact/${user.id}"
-                            hxTarget = "this"
-                            hxSwap = "outerHTML"
-
-                            table {
-                                tr {
-                                    td { label { htmlFor = FIRST_NAME; +"First Name" } }
-                                    td {
-                                        input(type = InputType.text, name = FIRST_NAME) {
-                                            value = user.firstName
-                                        }
-                                    }
-                                }
-                                tr {
-                                    td { label { htmlFor = LAST_NAME; +"Last Name" } }
-                                    td {
-                                        input(type = InputType.text, name = LAST_NAME) {
-                                            value = user.lastName
-                                        }
-                                    }
-                                }
-                                tr {
-                                    td { label { htmlFor = EMAIL; +"Email" } }
-                                    td {
-                                        input(type = InputType.text, name = EMAIL) {
-                                            value = user.email
-                                        }
-                                    }
-                                }
-                            }
-                            button(classes = "btn") { +"Submit" }
-                            button(classes = "btn") { hxGet = "/contact/${user.id}"; +"Cancel" }
-                        }
+                    editUserDataForm(user)
                 }
             }
             put("/contact/{id}") {
@@ -111,6 +76,44 @@ fun Application.configureTemplating() {
             }
         }
     }
+}
+
+private fun FlowContent.editUserDataForm(user: User?) {
+    if (user == null) div {} else
+        form {
+            hxPut = "/contact/${user.id}"
+            hxTarget = "this"
+            hxSwap = "outerHTML"
+
+            table {
+                tr {
+                    td { label { htmlFor = FIRST_NAME; +"First Name" } }
+                    td {
+                        input(type = InputType.text, name = FIRST_NAME) {
+                            value = user.firstName
+                        }
+                    }
+                }
+                tr {
+                    td { label { htmlFor = LAST_NAME; +"Last Name" } }
+                    td {
+                        input(type = InputType.text, name = LAST_NAME) {
+                            value = user.lastName
+                        }
+                    }
+                }
+                tr {
+                    td { label { htmlFor = EMAIL; +"Email" } }
+                    td {
+                        input(type = InputType.text, name = EMAIL) {
+                            value = user.email
+                        }
+                    }
+                }
+            }
+            button(classes = "btn") { +"Submit" }
+            button(classes = "btn") { hxGet = "/contact/${user.id}"; +"Cancel" }
+        }
 }
 
 private fun FlowContent.displayUserInfo(user: User?) {
