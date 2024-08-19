@@ -1,17 +1,10 @@
 package the.oronco.plugins
 
-import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.css.CSSBuilder
-import kotlinx.css.form
 import kotlinx.html.*
-import kotlinx.html.consumers.filter
-import kotlinx.html.stream.appendHTML
 import the.oronco.htmx.*
 import kotlin.contracts.ExperimentalContracts
 
@@ -146,6 +139,3 @@ private fun FlowContent.displayUserInfo(user: User?) {
 
 fun Route.htmxRequest(build: Route.()->Unit): Route = header("HX-Request", "true", build)
 
-suspend inline fun ApplicationCall.respondCss(builder: CSSBuilder.() -> Unit) {
-    this.respondText(CSSBuilder().apply(builder).toString(), ContentType.Text.CSS)
-}
