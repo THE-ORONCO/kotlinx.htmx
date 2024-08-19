@@ -32,7 +32,7 @@ dependencies {
     implementation("org.jetbrains:kotlin-css-jvm:1.0.0-pre.129-kotlin-1.4.20")
     // webjars
     implementation("io.ktor:ktor-server-webjars-jvm")
-    implementation("org.webjars.npm:htmx.org:1.9.12")
+    implementation("org.webjars.npm:htmx.org:2.0.2")
     implementation("org.webjars:bootstrap:5.2.3")
     // hints
     compileOnly("org.jetbrains:annotations:24.1.0")
