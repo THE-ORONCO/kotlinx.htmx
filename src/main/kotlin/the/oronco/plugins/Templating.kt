@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import io.ktor.util.*
 import kotlinx.html.*
 import the.oronco.htmx.*
 import kotlin.contracts.ExperimentalContracts
@@ -62,19 +63,22 @@ fun Application.configureTemplating() {
             put("/contact/{id}") {
                 val userId = call.parameters["id"]
 
-                if (userId != null) {
-                    val parameters = call.receiveParameters()
-                    val user = users[userId]
-                    parameters[FIRST_NAME]?.apply { user?.firstName = this }
-                    parameters[LAST_NAME]?.apply { user?.lastName = this }
-                    parameters[EMAIL]?.apply { user?.email = this }
-                }
+                updateUserData(userId, call.receiveParameters())
 
                 call.respondFragment {
                     displayUserInfo(users[userId])
                 }
             }
         }
+    }
+}
+
+private fun updateUserData(userId: String?, parameters: StringValues) {
+    if (userId != null) {
+        val user = users[userId]
+        parameters[FIRST_NAME]?.apply { user?.firstName = this }
+        parameters[LAST_NAME]?.apply { user?.lastName = this }
+        parameters[EMAIL]?.apply { user?.email = this }
     }
 }
 
