@@ -3,6 +3,7 @@ package the.oronco.htmx
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
+import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.html.*
@@ -27,3 +28,15 @@ private inline fun <T, C : TagConsumer<T>> C.fragment(crossinline block: FRAGMEN
     FRAGMENT(this).visitAndFinalize(this, block)
 
 fun Route.htmxRequest(build: Route.()->Unit): Route = header("HX-Request", "true", build)
+
+public suspend fun <TTemplate : Template<FlowContent>> ApplicationCall.respondFragmentTemplate(
+    template: TTemplate,
+    status: HttpStatusCode = HttpStatusCode.OK,
+    body: TTemplate.() -> Unit
+) {
+    respondFragment(status) {
+        with(template){apply() }
+    }
+    template.body()
+}
+

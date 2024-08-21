@@ -41,37 +41,46 @@ private const val EMAIL = "email"
 
 fun Application.configureTemplating() {
     routing {
-        get("/contact/{id}") {
-            call.respondHtml {
-                head {
-                    script(src = "/assets/htmx.org/2.0.2/dist/htmx.min.js") {}
-                    link(rel = "stylesheet", href = "/assets/bootstrap/bootstrap.min.css") {}
-                }
-                body {
-                    displayUserInfo(users[call.parameters["id"]])
-                }
-            }
-        }
-
         htmxRequest {
-            get("/contact/{id}/edit") {
+            get("/users/{id}/edit") {
                 call.respondFragment {
-                    val user = users[call.parameters["id"]]
-                    editUserDataForm(user)
+                    insert(EditUserInfoTemplate(users[call.parameters["id"]])){}
                 }
             }
-            put("/contact/{id}") {
+            put("/users/{id}") {
                 val userId = call.parameters["id"]
 
                 updateUserData(userId, call.receiveParameters())
 
                 call.respondFragment {
-                    displayUserInfo(users[userId])
+                    insert(UserInfoTemplate(users[userId])){}
+                }
+            }
+            get("/users/{id}") {
+                call.respondFragmentTemplate(UserInfoTemplate(users[call.parameters["id"]]!!)) {}
+            }
+        }
+
+        get("/users/{id}") {
+            call.respondHtmlTemplate(MainPageTemplate()) {
+                content {
+                    insert(UserInfoTemplate(users[call.parameters["id"]]!!)){}
                 }
             }
         }
+
+        get("/article"){
+            call.respondHtmlTemplate(LayoutTemplate()) {
+                content{
+                    articleTitle{+"test"}
+                }
+            }
+        }
+
+
     }
 }
+
 
 private fun updateUserData(userId: String?, parameters: StringValues) {
     if (userId != null) {
@@ -82,10 +91,11 @@ private fun updateUserData(userId: String?, parameters: StringValues) {
     }
 }
 
-private fun FlowContent.editUserDataForm(user: User?) {
-    if (user == null) div {} else
+class EditUserInfoTemplate(private val user: User?): Template<FlowContent> {
+    override fun FlowContent.apply() {
+        if (user == null) div {} else
         form {
-            hxPut = "/contact/${user.id}"
+            hxPut = "/users/${user.id}"
             hxTarget = "this"
             hxSwap = "outerHTML"
 
@@ -116,12 +126,54 @@ private fun FlowContent.editUserDataForm(user: User?) {
                 }
             }
             button(classes = "btn") { +"Submit" }
-            button(classes = "btn") { hxGet = "/contact/${user.id}"; +"Cancel" }
+            button(classes = "btn") { hxGet = "/users/${user.id}"; +"Cancel" }
         }
+}}
+
+class LayoutTemplate: Template<HTML> {
+    val header = Placeholder<FlowContent>()
+    val content = TemplatePlaceholder<ContentTemplate>()
+    override fun HTML.apply() {
+        body {
+            h1 {
+                insert(header)
+            }
+            insert(ContentTemplate(), content)
+        }
+    }
 }
 
-private fun FlowContent.displayUserInfo(user: User?) {
-    if (user == null) div {} else
+class MainPageTemplate: Template<HTML> {
+    val content = Placeholder<FlowContent>()
+    override fun HTML.apply() {
+        head {
+            script(src = "/assets/htmx.org/2.0.2/dist/htmx.min.js") {}
+            link(rel = "stylesheet", href = "/assets/bootstrap/bootstrap.min.css") {}
+        }
+        body {
+            insert(content)
+        }
+    }
+}
+
+class ContentTemplate: Template<FlowContent> {
+    val articleTitle = Placeholder<FlowContent>()
+    val articleText = Placeholder<FlowContent>()
+    override fun FlowContent.apply() {
+        article {
+            h2 {
+                insert(articleTitle)
+            }
+            p {
+                insert(articleText)
+            }
+        }
+    }
+}
+
+class UserInfoTemplate(private val user: User?): Template<FlowContent> {
+    override fun FlowContent.apply() {
+        if (user == null){div{}}else
         div {
             hxTarget = "this"
             hxSwap = "outerHTML"
@@ -141,9 +193,9 @@ private fun FlowContent.displayUserInfo(user: User?) {
             }
 
             button(classes = "btn primary") {
-                hxGet = "/contact/${user.id}/edit"
-                +"Edit Contact"
+                hxGet = "/users/${user.id}/edit"
+                +"Edit users"
             }
         }
+    }
 }
-
