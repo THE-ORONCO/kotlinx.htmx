@@ -31,7 +31,10 @@ data class User(
 )
 
 var users: Map<String, User> =
-    mutableMapOf("Fio" to User("Fio", "Thée", "Roncoletta", "fio@roncoletta.com", 24))
+    mutableMapOf(
+        "Fio" to User("Fio", "Thée", "Roncoletta", "fio@roncoletta.com", 24),
+        "Leo" to User("Leo", "Leo", "Roncoletta", "leo@roncoletta.com", 24),
+    )
 
 
 private const val FIRST_NAME = "firstName"
@@ -43,18 +46,14 @@ fun Application.configureTemplating() {
     routing {
         htmxRequest {
             get("/users/{id}/edit") {
-                call.respondFragment {
-                    insert(EditUserInfoTemplate(users[call.parameters["id"]])){}
-                }
+                call.respondFragmentTemplate(EditUserInfoTemplate(users[call.parameters["id"]])) {}
             }
             put("/users/{id}") {
                 val userId = call.parameters["id"]
 
                 updateUserData(userId, call.receiveParameters())
 
-                call.respondFragment {
-                    insert(UserInfoTemplate(users[userId])){}
-                }
+                call.respondFragmentTemplate(UserInfoTemplate(users[userId])) {}
             }
             get("/users/{id}") {
                 call.respondFragmentTemplate(UserInfoTemplate(users[call.parameters["id"]]!!)) {}
@@ -69,15 +68,18 @@ fun Application.configureTemplating() {
             }
         }
 
-        get("/article"){
-            call.respondHtmlTemplate(LayoutTemplate()) {
+        get("/users"){
+            call.respondHtmlTemplate(MainPageTemplate()) {
                 content{
-                    articleTitle{+"test"}
+                    h1 {
+                        +"All Users"
+                    }
+                    users.values.forEach {
+                        insert(UserInfoTemplate(it)) {}
+                    }
                 }
             }
         }
-
-
     }
 }
 
@@ -130,18 +132,6 @@ class EditUserInfoTemplate(private val user: User?): Template<FlowContent> {
         }
 }}
 
-class LayoutTemplate: Template<HTML> {
-    val header = Placeholder<FlowContent>()
-    val content = TemplatePlaceholder<ContentTemplate>()
-    override fun HTML.apply() {
-        body {
-            h1 {
-                insert(header)
-            }
-            insert(ContentTemplate(), content)
-        }
-    }
-}
 
 class MainPageTemplate: Template<HTML> {
     val content = Placeholder<FlowContent>()
@@ -156,25 +146,11 @@ class MainPageTemplate: Template<HTML> {
     }
 }
 
-class ContentTemplate: Template<FlowContent> {
-    val articleTitle = Placeholder<FlowContent>()
-    val articleText = Placeholder<FlowContent>()
-    override fun FlowContent.apply() {
-        article {
-            h2 {
-                insert(articleTitle)
-            }
-            p {
-                insert(articleText)
-            }
-        }
-    }
-}
-
 class UserInfoTemplate(private val user: User?): Template<FlowContent> {
     override fun FlowContent.apply() {
         if (user == null){div{}}else
         div {
+            style = "border-style: solid"
             hxTarget = "this"
             hxSwap = "outerHTML"
             table {
