@@ -27,9 +27,7 @@ private class FRAGMENT(override val consumer: TagConsumer<*>) :
 private inline fun <T, C : TagConsumer<T>> C.fragment(crossinline block: FRAGMENT.() -> Unit = {}): T =
     FRAGMENT(this).visitAndFinalize(this, block)
 
-fun Route.htmxRequest(build: Route.()->Unit): Route = header("HX-Request", "true", build)
-
-public suspend fun <TTemplate : Template<FlowContent>> ApplicationCall.respondFragmentTemplate(
+suspend fun <TTemplate : Template<FlowContent>> ApplicationCall.respondFragmentTemplate(
     template: TTemplate,
     status: HttpStatusCode = HttpStatusCode.OK,
     body: TTemplate.() -> Unit
@@ -39,4 +37,6 @@ public suspend fun <TTemplate : Template<FlowContent>> ApplicationCall.respondFr
     }
     template.body()
 }
+
+fun Route.htmxRequest(build: Route.()->Unit): Route = header("HX-Request", "true", build)
 
