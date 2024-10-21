@@ -1,6 +1,5 @@
 package the.oronco.plugins
 
-import io.ktor.i18n.i18n
 import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.request.*
@@ -100,8 +99,8 @@ class EditUserInfoTemplate(private val user: User?): Template<FlowContent> {
         if (user == null) div {} else
         form {
             hxPut = "/users/${user.id}"
-            hxTarget = "this"
-            hxSwap = outerHtml {}
+            hxTarget = targetThis
+            hxSwap = outerHtml
 
             table {
                 tr {
@@ -153,8 +152,8 @@ class UserInfoTemplate(private val user: User?): Template<FlowContent> {
         if (user == null){div{}}else
         div {
             style = "border-style: solid"
-            hxTarget = "this"
-            hxSwap = outerHtml { }
+            hxTarget = targetThis
+            hxSwap = outerHtml {settle(200)}
             table {
                 tr {
                     td { label { htmlFor = FIRST_NAME; +"First Name" } }

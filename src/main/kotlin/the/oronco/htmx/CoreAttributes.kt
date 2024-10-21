@@ -1,5 +1,7 @@
 package the.oronco.htmx
 
+import kotlinx.css.CssBuilder
+import kotlinx.css.userSelect
 import kotlinx.html.Tag
 import kotlin.reflect.KClass
 import kotlin.time.Duration
@@ -114,15 +116,24 @@ var Tag.hxSwap : HxSwap?
         }
     }
 
-fun innerHtml(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.INNER_HTML, modifiers)
-fun outerHtml(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.OUTER_HTML, modifiers)
-fun textContent(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.TEXT_CONTENT, modifiers)
-fun beforeBegin(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.BEFORE_BEGIN, modifiers)
-fun afterBegin(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.AFTER_BEGIN, modifiers)
-fun beforeEnd(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.BEFORE_END, modifiers)
-fun afterEnd(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.AFTER_END, modifiers)
-fun delete(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.DELETE, modifiers)
-fun none(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.NONE, modifiers)
+fun innerHtml(modifiers: HxSwap.() -> Unit = {}): HxSwap = initSwap(SwapStyle.INNER_HTML, modifiers)
+val innerHtml = innerHtml()
+fun outerHtml(modifiers: HxSwap.() -> Unit= {}): HxSwap = initSwap(SwapStyle.OUTER_HTML, modifiers)
+val outerHtml = outerHtml()
+fun textContent(modifiers: HxSwap.() -> Unit= {}): HxSwap = initSwap(SwapStyle.TEXT_CONTENT, modifiers)
+val textContent = textContent()
+fun beforeBegin(modifiers: HxSwap.() -> Unit= {}): HxSwap = initSwap(SwapStyle.BEFORE_BEGIN, modifiers)
+val beforeBegin = beforeBegin()
+fun afterBegin(modifiers: HxSwap.() -> Unit= {}): HxSwap = initSwap(SwapStyle.AFTER_BEGIN, modifiers)
+val afterBegin = afterBegin()
+fun beforeEnd(modifiers: HxSwap.() -> Unit= {}): HxSwap = initSwap(SwapStyle.BEFORE_END, modifiers)
+val beforeEnd = beforeEnd()
+fun afterEnd(modifiers: HxSwap.() -> Unit= {}): HxSwap = initSwap(SwapStyle.AFTER_END, modifiers)
+val afterEnd = afterEnd()
+fun delete(modifiers: HxSwap.() -> Unit= {}): HxSwap = initSwap(SwapStyle.DELETE, modifiers)
+val delete = delete()
+fun none(modifiers: HxSwap.() -> Unit= {}): HxSwap = initSwap(SwapStyle.NONE, modifiers)
+val none = none()
 
 private fun initSwap(style: SwapStyle, modifiers: HxSwap.() -> Unit): HxSwap{
     val swap = HxSwapImpl(style, mutableMapOf())
@@ -130,14 +141,8 @@ private fun initSwap(style: SwapStyle, modifiers: HxSwap.() -> Unit): HxSwap{
     return swap
 }
 
- fun HxSwap.transition(shouldTransition: Boolean): HxSwap {
 
-    return this;
-}
-
-
-
-interface HxSwap : HxValue {
+interface HxSwap : HxValue, HxSwapOob {
     val swapStyle: SwapStyle
     var modifiers : MutableMap<KClass<out Modifier>, Modifier>
     override fun display(): String = "${this.swapStyle.representation} ${this.modifiers.values.joinToString(" ", transform = Modifier::display)}"
@@ -148,8 +153,11 @@ interface HxSwap : HxValue {
     }
 
     fun transition(shouldTransition: Boolean): HxSwap = addModifier(Transition(shouldTransition))
-    fun swap(duration: HxDuration): HxSwap = addModifier(Swap(duration))
-    fun settle(duration: HxDuration): HxSwap = addModifier(Settle(duration))
+    // TODO implement nicer passing of time unit
+    fun swap(delay: HxDuration): HxSwap = addModifier(Swap(delay))
+    fun swap(delay: Number): HxSwap = addModifier(Swap(delay.asHxDuration()))
+    fun settle(delay: HxDuration): HxSwap = addModifier(Settle(delay))
+    fun settle(delay: Number): HxSwap = addModifier(Settle(delay.asHxDuration()))
     fun ignoreTitle(doIgnoreTitle: Boolean): HxSwap = addModifier(IgnoreTitle(doIgnoreTitle))
     // TODO nicer interface than passing enums
     fun scroll(target: String? = null, verticalLocation: VerticalLocation): HxSwap = addModifier(Scroll(target, verticalLocation))
@@ -163,7 +171,9 @@ interface HxSwap : HxValue {
 private data class HxSwapImpl(
     override val swapStyle: SwapStyle,
     override var modifiers: MutableMap<KClass<out Modifier>, Modifier>
-) : HxSwap
+) : HxSwap {
+    override fun display(): String = "${this.swapStyle.representation} ${this.modifiers.values.joinToString(" ", transform = Modifier::display)}"
+}
 
 enum class SwapStyle(val representation: String){
     INNER_HTML("innerHtml"),
@@ -179,17 +189,15 @@ enum class SwapStyle(val representation: String){
 
 sealed interface Modifier : HxValue
 
-
 data class Transition(val shouldTransition: Boolean): Modifier{
     override fun display(): String = "transition:${shouldTransition}"
 }
-data class Swap(val duration: HxDuration) : Modifier{
-    override fun display(): String = "swap:${duration.display()}"
+data class Swap(val delay: HxDuration) : Modifier{
+    override fun display(): String = "swap:${delay.display()}"
 }
-data class Settle(val duration: HxDuration) : Modifier {
-    override fun display(): String = "settle:${duration.display()}"
+data class Settle(val delay: HxDuration) : Modifier {
+    override fun display(): String = "settle:${delay.display()}"
 }
-
 
 interface HxDuration : HxValue {
     data class Minutes(val duration: Double) : HxDuration {
@@ -203,10 +211,8 @@ interface HxDuration : HxValue {
     }
 }
 
-fun Float.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this.toDouble())
-fun Double.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this)
+fun Number.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this.toDouble())
 fun Duration.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this.inWholeMilliseconds.toDouble())
-
 
 data class IgnoreTitle(val ignoreTitle: Boolean): Modifier {
     override fun display(): String = "ignoreTitle:${ignoreTitle}"
@@ -239,15 +245,68 @@ data class FocusScroll(val doFocusScroll: Boolean): Modifier {
 
 // https://htmx.org/attributes/hx-swap-oob/
 private const val HX_SWAP_OOB = "hx-swap-oob"
-var Tag.hxSwapOob : String?
-    get() = attributes[HX_SWAP_OOB]
-    set(newValue) { if (newValue != null) { attributes[HX_SWAP_OOB] = newValue } }
+var Tag.hxSwapOob : HxSwapOob?
+    get() = null // TODO parse attributes[HX_SWAP_OOB] into object
+    set(newValue) { if (newValue != null) { attributes[HX_SWAP_OOB] = newValue.display() } }
+sealed interface HxSwapOob : HxValue
+class DoSwapOob : HxSwapOob {
+    override fun display(): String = "true"
+}
+
+fun <T> T.select(cssSelector: String?): HxSwapWithSelect where T : HxSwap, T : HxSwapOob = when {
+    cssSelector?.startsWith('#') == false -> HxSwapWithSelect(this, "#${cssSelector}")
+    else -> HxSwapWithSelect(this, cssSelector)
+}
+
+// TODO use actual CSS selector instead of string
+data class HxSwapWithSelect(val swap: HxSwap, val cssSelector: String?) : HxSwapOob {
+    override fun display(): String = when {
+        cssSelector != null -> "${swap.display()}:${cssSelector}"
+        else -> swap.display()
+    }
+}
+
+fun doSwapOob(): HxSwapOob = DoSwapOob()
+val doSwapOob: HxSwapOob = DoSwapOob()
+fun swapOob(swap: HxSwap): HxSwapOob = HxSwapWithSelect(swap, null)
+fun swapOob(swap: HxSwap, selector: String?): HxSwapOob = HxSwapWithSelect(swap, selector)
+
+
 
 // https://htmx.org/attributes/hx-target/
 private const val HX_TARGET = "hx-target"
-var Tag.hxTarget : String?
-    get() = attributes[HX_TARGET]
-    set(newValue) { if (newValue != null) { attributes[HX_TARGET] = newValue } }
+var Tag.hxTarget : HxTarget?
+    get() = null // TODO parse attributes[HX_TARGET] to objects
+    set(newValue) { if (newValue != null) { attributes[HX_TARGET] = newValue.display() } }
+
+sealed interface HxTarget: HxValue
+// TODO replace with nicer css selector
+data class HxTargetCss(val cssSelector: String) : HxTarget {
+    override fun display(): String = cssSelector
+}
+class HxTargetThis: HxTarget{
+    override fun display(): String = "this"
+}
+data class HxTargetClosest(val cssSelector: String) : HxTarget { override fun display(): String = "closest:${cssSelector}" }
+data class HxTargetFind(val cssSelector: String) : HxTarget { override fun display(): String = "find:${cssSelector}" }
+data class HxTargetNext(val cssSelector: String?) : HxTarget {
+    override fun display(): String = when {
+        cssSelector != null -> "next:${cssSelector}"
+    else -> "next"}
+}
+data class HxTargetPrevious(val cssSelector: String?) : HxTarget {
+    override fun display():  String = when {
+        cssSelector != null -> "previous:${cssSelector}"
+        else -> "previous"}
+}
+fun targetCss(cssSelector: String) = HxTargetCss(cssSelector)
+val targetThis = HxTargetThis()
+fun targetClosest(cssSelector: String) = HxTargetClosest(cssSelector)
+fun targetFind(cssSelector: String) = HxTargetFind(cssSelector)
+val targetNext = HxTargetNext(null)
+fun targetNext(cssSelector: String?) = HxTargetNext(cssSelector)
+val targetPrevious = HxTargetPrevious(null)
+fun targetPrevious(cssSelector: String?) = HxTargetPrevious(cssSelector)
 
 // https://htmx.org/attributes/hx-trigger/
 private const val HX_TRIGGER = "hx-trigger" // TODO a list of enums for cleaner syntax possible?
