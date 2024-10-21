@@ -2,11 +2,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val kotlin_version: String by project
 val logback_version: String by project
-val kotlinx_html_version: String by project
 
 plugins {
-    kotlin("jvm") version "2.0.20"
-    id("io.ktor.plugin") version "2.3.12"
+    kotlin("jvm") version "2.0.21"
+    id("io.ktor.plugin") version "3.0.0"
 }
 
 group = "the.oronco"
@@ -23,7 +22,9 @@ kotlin{
     compilerOptions{
         jvmTarget = JvmTarget.JVM_21
     }
+
 }
+
 
 repositories {
     mavenCentral()
@@ -51,21 +52,23 @@ dependencies {
     implementation("io.ktor:ktor-server-forwarded-header")
     implementation("io.ktor:ktor-server-hsts")
     // content handling
-    // TODO use "io.ktor:ktor-server-i18n" as soon as it is officially released
+    implementation("io.ktor:ktor-server-i18n")
     // html
-    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:$kotlinx_html_version")
-    implementation("org.jetbrains:kotlin-css-jvm:1.0.0-pre.129-kotlin-1.4.20")
+    implementation("io.ktor:ktor-server-html-builder")
+    implementation("io.ktor:ktor-server-html-builder")
+    implementation("org.jetbrains.kotlin-wrappers:kotlin-css:1.0.0-pre.819")
 
     // webjars
     // TODO get rid of java dependencies so that I can run this server completely natively (see https://ktor.io/docs/server-native.html#native-target)
     implementation("io.ktor:ktor-server-webjars-jvm")
-    implementation("org.webjars.npm:htmx.org:2.0.2")
-    implementation("org.webjars:bootstrap:5.2.3")
-    // hints
-    compileOnly("org.jetbrains:annotations:24.1.0")
+    implementation("org.webjars.npm:htmx.org:2.0.3")
+    implementation("org.webjars:bootstrap:5.3.3")
     // logging
     implementation("ch.qos.logback:logback-classic:$logback_version")
+    // hints
+    compileOnly("org.jetbrains:annotations:26.0.1")
     // testing
-    testImplementation("io.ktor:ktor-server-tests-jvm")
+    testImplementation("io.ktor:ktor-server-test-host")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlin_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

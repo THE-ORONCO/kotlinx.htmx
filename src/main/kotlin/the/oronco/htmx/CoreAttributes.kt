@@ -1,12 +1,18 @@
 package the.oronco.htmx
 
 import kotlinx.html.Tag
+import kotlin.reflect.KClass
+import kotlin.time.Duration
 
 /**
  * https://htmx.org/reference/#attributes
  * @author the_oronco@posteo.net
  * @since 19.06.24
  **/
+
+fun interface HxValue {
+    fun display(): String // TODO think about sanitization
+}
 
 
 // https://htmx.org/attributes/hx-get/
@@ -100,9 +106,136 @@ var Tag.hxSelectOob : String?
 
 // https://htmx.org/attributes/hx-swap/
 private const val HX_SWAP = "hx-swap"
-var Tag.hxSwap : String?
-    get() = attributes[HX_SWAP]
-    set(newValue) { if (newValue != null) { attributes[HX_SWAP] = newValue } }
+var Tag.hxSwap : HxSwap?
+    get() = null // TODO parse attributes[HX_SWAP] into the data structure
+    set(newValue) {
+        when {
+            newValue != null -> attributes[HX_SWAP] = newValue.display()
+        }
+    }
+
+fun innerHtml(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.INNER_HTML, modifiers)
+fun outerHtml(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.OUTER_HTML, modifiers)
+fun textContent(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.TEXT_CONTENT, modifiers)
+fun beforeBegin(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.BEFORE_BEGIN, modifiers)
+fun afterBegin(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.AFTER_BEGIN, modifiers)
+fun beforeEnd(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.BEFORE_END, modifiers)
+fun afterEnd(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.AFTER_END, modifiers)
+fun delete(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.DELETE, modifiers)
+fun none(modifiers: HxSwap.() -> Unit): HxSwap = initSwap(SwapStyle.NONE, modifiers)
+
+private fun initSwap(style: SwapStyle, modifiers: HxSwap.() -> Unit): HxSwap{
+    val swap = HxSwapImpl(style, mutableMapOf())
+    swap.modifiers()
+    return swap
+}
+
+ fun HxSwap.transition(shouldTransition: Boolean): HxSwap {
+
+    return this;
+}
+
+
+
+interface HxSwap : HxValue {
+    val swapStyle: SwapStyle
+    var modifiers : MutableMap<KClass<out Modifier>, Modifier>
+    override fun display(): String = "${this.swapStyle.representation} ${this.modifiers.values.joinToString(" ", transform = Modifier::display)}"
+
+    private fun  addModifier(modifier: Modifier): HxSwap {
+        this.modifiers[modifier.javaClass.kotlin] = modifier
+        return this
+    }
+
+    fun transition(shouldTransition: Boolean): HxSwap = addModifier(Transition(shouldTransition))
+    fun swap(duration: HxDuration): HxSwap = addModifier(Swap(duration))
+    fun settle(duration: HxDuration): HxSwap = addModifier(Settle(duration))
+    fun ignoreTitle(doIgnoreTitle: Boolean): HxSwap = addModifier(IgnoreTitle(doIgnoreTitle))
+    // TODO nicer interface than passing enums
+    fun scroll(target: String? = null, verticalLocation: VerticalLocation): HxSwap = addModifier(Scroll(target, verticalLocation))
+    fun scroll(verticalLocation: VerticalLocation): HxSwap = addModifier(Scroll(verticalLocation =  verticalLocation))
+    fun show(target: String? = null, verticalLocation: VerticalLocation): HxSwap = addModifier(Show(target, verticalLocation))
+    fun show(verticalLocation: VerticalLocation): HxSwap = addModifier(Show(verticalLocation = verticalLocation))
+    fun focusScroll(doFocusScroll: Boolean): HxSwap = addModifier(IgnoreTitle(doFocusScroll))
+}
+
+
+private data class HxSwapImpl(
+    override val swapStyle: SwapStyle,
+    override var modifiers: MutableMap<KClass<out Modifier>, Modifier>
+) : HxSwap
+
+enum class SwapStyle(val representation: String){
+    INNER_HTML("innerHtml"),
+    OUTER_HTML("outerHtml"),
+    TEXT_CONTENT("textContent"),
+    BEFORE_BEGIN("beforeBegin"),
+    AFTER_BEGIN("afterBegin"),
+    BEFORE_END("beforeEnd"),
+    AFTER_END("afterEnd"),
+    DELETE("delete"),
+    NONE("none"),
+}
+
+sealed interface Modifier : HxValue
+
+
+data class Transition(val shouldTransition: Boolean): Modifier{
+    override fun display(): String = "transition:${shouldTransition}"
+}
+data class Swap(val duration: HxDuration) : Modifier{
+    override fun display(): String = "swap:${duration.display()}"
+}
+data class Settle(val duration: HxDuration) : Modifier {
+    override fun display(): String = "settle:${duration.display()}"
+}
+
+
+interface HxDuration : HxValue {
+    data class Minutes(val duration: Double) : HxDuration {
+        override fun display(): String = "${duration}m"
+    }
+    data class Seconds(val duration: Double) : HxDuration {
+        override fun display(): String = "${duration}s"
+    }
+    data class MilliSeconds(val duration: Double) : HxDuration {
+        override fun display(): String = "${duration}ms"
+    }
+}
+
+fun Float.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this.toDouble())
+fun Double.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this)
+fun Duration.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this.inWholeMilliseconds.toDouble())
+
+
+data class IgnoreTitle(val ignoreTitle: Boolean): Modifier {
+    override fun display(): String = "ignoreTitle:${ignoreTitle}"
+}
+
+// TODO use something other than CSS strings for targeting
+data class Scroll(val target: String? = null, val verticalLocation: VerticalLocation) : Modifier {
+    override fun display(): String = when {
+        target != null -> "scroll:${target}:${verticalLocation.representation}"
+        else -> "scroll:${verticalLocation.representation}"
+    }
+}
+
+data class Show(val target: String? = null, val verticalLocation: VerticalLocation) : Modifier {
+    override fun display(): String = when {
+        target != null -> "show:${target}:${verticalLocation.representation}"
+        else -> "show:${verticalLocation.representation}"
+    }
+}
+enum class VerticalLocation(val representation: String) {
+    TOP("top"),
+    BOTTOM("bottom"),
+    NONE("none"),
+}
+
+data class FocusScroll(val doFocusScroll: Boolean): Modifier {
+    override fun display(): String = "focus-scroll:${doFocusScroll}"
+}
+
 
 // https://htmx.org/attributes/hx-swap-oob/
 private const val HX_SWAP_OOB = "hx-swap-oob"

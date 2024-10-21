@@ -2,6 +2,7 @@ package the.oronco
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.i18n.I18n
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -30,6 +31,11 @@ fun main() {
 fun Application.module() {
     install(Webjars){
         path = "assets"
+    }
+    install(I18n){
+        // TODO use locales instead of hardcoded strings
+        availableLanguages= listOf("de", "en")
+        defaultLanguage = "en"
     }
     install(Compression) {
         gzip {

@@ -1,5 +1,6 @@
 package the.oronco.plugins
 
+import io.ktor.i18n.i18n
 import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.request.*
@@ -70,6 +71,7 @@ fun Application.configureTemplating() {
 
         get("/users"){
             call.respondHtmlTemplate(MainPageTemplate()) {
+
                 content{
                     h1 {
                         +"All Users"
@@ -99,7 +101,7 @@ class EditUserInfoTemplate(private val user: User?): Template<FlowContent> {
         form {
             hxPut = "/users/${user.id}"
             hxTarget = "this"
-            hxSwap = "outerHTML"
+            hxSwap = outerHtml {}
 
             table {
                 tr {
@@ -152,7 +154,7 @@ class UserInfoTemplate(private val user: User?): Template<FlowContent> {
         div {
             style = "border-style: solid"
             hxTarget = "this"
-            hxSwap = "outerHTML"
+            hxSwap = outerHtml { }
             table {
                 tr {
                     td { label { htmlFor = FIRST_NAME; +"First Name" } }
