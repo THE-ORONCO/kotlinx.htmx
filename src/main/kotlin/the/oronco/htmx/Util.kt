@@ -40,3 +40,13 @@ suspend fun <TTemplate : Template<FlowContent>> ApplicationCall.respondFragmentT
 
 fun Route.htmxRequest(build: Route.()->Unit): Route = header("HX-Request", "true", build)
 
+/**
+ * A helper type that should be annotated with something like
+ * ```kotlin
+ * @Language(value = "CSS", prefix = ":is(", suffix = ")")
+ * val cssSelector: CssSelector = "#a"
+ * ```
+ * to allow for IDE syntax highlighting of the CSS string.
+ * ***THIS DOES NOT ENFORCE CSS SELECTOR CORRECTNESS!***
+ * */
+internal typealias  CssSelector = String

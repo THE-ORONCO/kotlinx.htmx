@@ -1,8 +1,7 @@
 package the.oronco.htmx
 
-import kotlinx.css.CssBuilder
-import kotlinx.css.userSelect
 import kotlinx.html.Tag
+import org.intellij.lang.annotations.Language
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 
@@ -218,15 +217,14 @@ data class IgnoreTitle(val ignoreTitle: Boolean): Modifier {
     override fun display(): String = "ignoreTitle:${ignoreTitle}"
 }
 
-// TODO use something other than CSS strings for targeting
-data class Scroll(val target: String? = null, val verticalLocation: VerticalLocation) : Modifier {
+data class Scroll(@Language(value = "CSS", prefix = ":is(", suffix = ")") val target: CssSelector? = null, val verticalLocation: VerticalLocation) : Modifier {
     override fun display(): String = when {
         target != null -> "scroll:${target}:${verticalLocation.representation}"
         else -> "scroll:${verticalLocation.representation}"
     }
 }
 
-data class Show(val target: String? = null, val verticalLocation: VerticalLocation) : Modifier {
+data class Show(@Language(value = "CSS", prefix = ":is(", suffix = ")") val target: CssSelector? = null, val verticalLocation: VerticalLocation) : Modifier {
     override fun display(): String = when {
         target != null -> "show:${target}:${verticalLocation.representation}"
         else -> "show:${verticalLocation.representation}"
@@ -248,18 +246,19 @@ private const val HX_SWAP_OOB = "hx-swap-oob"
 var Tag.hxSwapOob : HxSwapOob?
     get() = null // TODO parse attributes[HX_SWAP_OOB] into object
     set(newValue) { if (newValue != null) { attributes[HX_SWAP_OOB] = newValue.display() } }
+
 sealed interface HxSwapOob : HxValue
 class DoSwapOob : HxSwapOob {
     override fun display(): String = "true"
 }
 
-fun <T> T.select(cssSelector: String?): HxSwapWithSelect where T : HxSwap, T : HxSwapOob = when {
-    cssSelector?.startsWith('#') == false -> HxSwapWithSelect(this, "#${cssSelector}")
-    else -> HxSwapWithSelect(this, cssSelector)
-}
+fun <T> T.select(
+    @Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector?
+): HxSwapWithSelect where T : HxSwap, T : HxSwapOob =
+    HxSwapWithSelect(this, cssSelector)
 
-// TODO use actual CSS selector instead of string
-data class HxSwapWithSelect(val swap: HxSwap, val cssSelector: String?) : HxSwapOob {
+
+data class HxSwapWithSelect(@Language(value = "CSS", prefix = ":is(", suffix = ")") val swap: HxSwap, val cssSelector: CssSelector?) : HxSwapOob {
     override fun display(): String = when {
         cssSelector != null -> "${swap.display()}:${cssSelector}"
         else -> swap.display()
@@ -269,7 +268,7 @@ data class HxSwapWithSelect(val swap: HxSwap, val cssSelector: String?) : HxSwap
 fun doSwapOob(): HxSwapOob = DoSwapOob()
 val doSwapOob: HxSwapOob = DoSwapOob()
 fun swapOob(swap: HxSwap): HxSwapOob = HxSwapWithSelect(swap, null)
-fun swapOob(swap: HxSwap, selector: String?): HxSwapOob = HxSwapWithSelect(swap, selector)
+fun swapOob(swap: HxSwap, @Language(value = "CSS", prefix = ":is(", suffix = ")") selector: CssSelector?): HxSwapOob = HxSwapWithSelect(swap, selector)
 
 
 
@@ -280,33 +279,38 @@ var Tag.hxTarget : HxTarget?
     set(newValue) { if (newValue != null) { attributes[HX_TARGET] = newValue.display() } }
 
 sealed interface HxTarget: HxValue
-// TODO replace with nicer css selector
-data class HxTargetCss(val cssSelector: String) : HxTarget {
+data class HxTargetCss(@Language(value = "CSS", prefix = ":is(", suffix = ")") val cssSelector: CssSelector) : HxTarget {
     override fun display(): String = cssSelector
 }
 class HxTargetThis: HxTarget{
     override fun display(): String = "this"
 }
-data class HxTargetClosest(val cssSelector: String) : HxTarget { override fun display(): String = "closest:${cssSelector}" }
-data class HxTargetFind(val cssSelector: String) : HxTarget { override fun display(): String = "find:${cssSelector}" }
-data class HxTargetNext(val cssSelector: String?) : HxTarget {
+
+data class HxTargetClosest(@Language(value = "CSS", prefix = ":is(", suffix = ")") val cssSelector: CssSelector) : HxTarget {
+    override fun display(): String = "closest:${cssSelector}"
+}
+
+data class HxTargetFind(@Language(value = "CSS", prefix = ":is(", suffix = ")") val cssSelector: CssSelector) : HxTarget { override fun display(): String = "find:${cssSelector}" }
+data class HxTargetNext(@Language(value = "CSS", prefix = ":is(", suffix = ")") val cssSelector: CssSelector?) : HxTarget {
     override fun display(): String = when {
         cssSelector != null -> "next:${cssSelector}"
-    else -> "next"}
+        else -> "next"
+    }
 }
-data class HxTargetPrevious(val cssSelector: String?) : HxTarget {
-    override fun display():  String = when {
+data class HxTargetPrevious(@Language(value = "CSS", prefix = ":is(", suffix = ")") val cssSelector: CssSelector?) : HxTarget {
+    override fun display(): String = when {
         cssSelector != null -> "previous:${cssSelector}"
-        else -> "previous"}
+        else -> "previous"
+    }
 }
-fun targetCss(cssSelector: String) = HxTargetCss(cssSelector)
+fun targetCss(@Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector) = HxTargetCss(cssSelector)
 val targetThis = HxTargetThis()
-fun targetClosest(cssSelector: String) = HxTargetClosest(cssSelector)
-fun targetFind(cssSelector: String) = HxTargetFind(cssSelector)
+fun targetClosest(@Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector) = HxTargetClosest(cssSelector)
+fun targetFind(@Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector) = HxTargetFind(cssSelector)
 val targetNext = HxTargetNext(null)
-fun targetNext(cssSelector: String?) = HxTargetNext(cssSelector)
+fun targetNext(@Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector?) = HxTargetNext(cssSelector)
 val targetPrevious = HxTargetPrevious(null)
-fun targetPrevious(cssSelector: String?) = HxTargetPrevious(cssSelector)
+fun targetPrevious(@Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector?) = HxTargetPrevious(cssSelector)
 
 // https://htmx.org/attributes/hx-trigger/
 private const val HX_TRIGGER = "hx-trigger" // TODO a list of enums for cleaner syntax possible?
