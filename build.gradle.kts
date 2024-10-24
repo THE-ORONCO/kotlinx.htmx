@@ -55,7 +55,6 @@ dependencies {
     implementation("io.ktor:ktor-server-i18n")
     // html
     implementation("io.ktor:ktor-server-html-builder")
-    implementation("io.ktor:ktor-server-html-builder")
     implementation("org.jetbrains.kotlin-wrappers:kotlin-css:1.0.0-pre.819")
 
     // webjars

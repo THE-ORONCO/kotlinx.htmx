@@ -11,7 +11,7 @@ import kotlinx.html.Tag
 // https://htmx.org/attributes/hx-boost/
 private const val HX_BOOST = "hx-boost"
 var Tag.hxBoost : Boolean
-    get() = attributes[HX_BOOST]?.equals("true") ?: false
+    get() = attributes[HX_BOOST]?.equals("true") == true
     set(newValue) { attributes[HX_BOOST] = if (newValue) { "true" } else { "false" } }
 
 // https://htmx.org/attributes/hx-confirm/
