@@ -138,7 +138,7 @@ class MainPageTemplate: Template<HTML> {
     val content = Placeholder<FlowContent>()
     override fun HTML.apply() {
         head {
-            script(src = "/assets/htmx.org/2.0.2/dist/htmx.min.js") {}
+            script(src = "/assets/htmx.org/2.0.3/dist/htmx.min.js") {} // TODO somehow detect version dynamically
             link(rel = "stylesheet", href = "/assets/bootstrap/bootstrap.min.css") {}
         }
         body {
