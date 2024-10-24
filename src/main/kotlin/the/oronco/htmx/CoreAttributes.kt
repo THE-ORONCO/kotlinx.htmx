@@ -175,13 +175,13 @@ private data class HxSwapImpl(
 }
 
 enum class SwapStyle(val representation: String){
-    INNER_HTML("innerHtml"),
-    OUTER_HTML("outerHtml"),
+    INNER_HTML("innerHTML"),
+    OUTER_HTML("outerHTML"),
     TEXT_CONTENT("textContent"),
-    BEFORE_BEGIN("beforeBegin"),
-    AFTER_BEGIN("afterBegin"),
-    BEFORE_END("beforeEnd"),
-    AFTER_END("afterEnd"),
+    BEFORE_BEGIN("beforebegin"),
+    AFTER_BEGIN("afterbegin"),
+    BEFORE_END("beforeend"),
+    AFTER_END("afterend"),
     DELETE("delete"),
     NONE("none"),
 }
