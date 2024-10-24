@@ -153,7 +153,7 @@ class UserInfoTemplate(private val user: User?): Template<FlowContent> {
         div {
             style = "border-style: solid"
             hxTarget = targetThis
-            hxSwap = outerHtml {settle(200)}
+            hxSwap = outerHtml
             table {
                 tr {
                     td { label { htmlFor = FIRST_NAME; +"First Name" } }
