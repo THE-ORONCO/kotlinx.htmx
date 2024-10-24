@@ -32,11 +32,11 @@ fun Application.module() {
     install(Webjars){
         path = "assets"
     }
-    install(I18n){
-        // TODO use locales instead of hardcoded strings
-        availableLanguages= listOf("de", "en")
-        defaultLanguage = "en"
-    }
+//    install(I18n){ TODO investigate why this causes problems with some requests
+//        // TODO use locales instead of hardcoded strings
+//        availableLanguages= listOf("de", "en")
+//        defaultLanguage = "en"
+//    }
     install(Compression) {
         gzip {
 //            condition { request.headers[HttpHeaders.Referrer]?.startsWith("https://my.domain/") == true }

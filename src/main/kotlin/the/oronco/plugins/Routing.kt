@@ -9,7 +9,8 @@ fun Application.configureRouting() {
     routing {
         get("/") {
             call.respondText(
-                i18n("meme")
+//                i18n("meme")
+                "hi UwU"
             )
         }
     }
