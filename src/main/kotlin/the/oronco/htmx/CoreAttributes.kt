@@ -2,6 +2,7 @@ package the.oronco.htmx
 
 import kotlinx.html.Tag
 import org.intellij.lang.annotations.Language
+import java.awt.image.ImageObserver.ABORT
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 
@@ -29,63 +30,13 @@ var Tag.hxPost : String?
     set(newValue) { if (newValue != null) { attributes[HX_POST] = newValue } }
 
 // https://htmx.org/attributes/hx-on/
-//private const val HX_ON = "hx-on"
-//var Tag.hxOn : Map<String, String> // TODO convert events to wrapper data classes instead of using strings
-//    get() = attributes.filter { it.value.startsWith(HX_ON) }
-//    set(newValue: Event, ) { if (newValue != null) { attributes[HX_ON] } }
-
-sealed interface Event{
-    val event: String;
-}
-data class CustomEvent(override val event: String) : Event
-enum class HTMXEvent(private val value: String) : Event {
-    ABORT("abort"),
-    AFTER_ON_LOAD("afterOnLoad"),
-    AFTER_PROCESS_NODE("afterProcessNode"),
-    AFTER_REQUEST("afterRequest"),
-    AFTER_SETTLE("afterSettle"),
-    AFTER_SWAP("afterSwap"),
-    BEFORE_CLEANUP_ELEMENT("beforeCleanupElement"),
-    BEFORE_ON_LOAD("beforeOnLoad"),
-    BEFORE_PROCESS_NODE("beforeProcessNode"),
-    BEFORE_REQUEST("beforeRequest"),
-    BEFORE_SWAP("beforeSwap"),
-    BEFORE_SEND("beforeSend"),
-    CONFIG_REQUEST("configRequest"),
-    CONFIRM("confirm"),
-    HISTORY_CACHE_ERROR("historyCacheError"),
-    HISTORY_CACHE_MISS("historyCacheMiss"),
-    HISTORY_CACHE_MISS_ERROR("historyCacheMissError"),
-    HISTORY_CACHE_MISS_LOAD("historyCacheMissLoad"),
-    HISTORY_RESTORE("historyRestore"),
-    BEFORE_HISTORY_SAVE("beforeHistorySave"),
-    LOAD("load"),
-    NO_SSE_SOURCE_ERROR("noSSESourceError"),
-    ON_LOAD_ERROR("onLoadError"),
-    OOB_AFTER_SWAP("oobAfterSwap"),
-    OOB_BEFORE_SWAP("oobBeforeSwap"),
-    OOB_ERROR_NO_TARGET("oobErrorNoTarget"),
-    PROMPT("prompt"),
-    PUSHED_INTO_HISTORY("pushedIntoHistory"),
-    RESPONSE_ERROR("responseError"),
-    SEND_ERROR("sendError"),
-    SSE_ERROR("sseError"),
-    SSE_OPEN("sseOpen"),
-    SWAP_ERROR("swapError"),
-    TARGET_ERROR("targetError"),
-    TIMEOUT("timeout"),
-    VALIDATION_VALIDATE("validation:validate"),
-    VALIDATION_FAILED("validation:failed"),
-    VALIDATION_HALTED("validation:halted"),
-    XHR_ABORT("xhr:abort"),
-    XHR_LOADEND("xhr:loadend"),
-    XHR_LOADSTART("xhr:loadstart"),
-    XHR_PROGRESS("xhr:progress"),
-    ;
-
-    override val event: String
-        get() = "htmx::$value"
-}
+private const val HX_ON = "hx-on"
+var Tag.hxOn : Map<String, String>
+    get() = attributes
+        .filterKeys { it.startsWith(HX_ON) }
+        .mapKeys { it.key.replace(HX_ON, "") }
+    // TODO think about making the separator - as some templating languages don't like `:` in element attributes
+    set(eventMap) = eventMap.forEach { event, js -> attributes["${HX_ON}:${event}"] = js }
 
 // https://htmx.org/attributes/hx-push-url/
 private const val HX_PUSH_URL = "hx-push-url"

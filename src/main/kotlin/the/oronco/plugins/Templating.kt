@@ -7,6 +7,8 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.html.*
 import the.oronco.htmx.*
+import the.oronco.htmx.HtmxEvent.Companion.afterSwap
+import the.oronco.htmx.HtmxEvent.Companion.beforeOnLoad
 import kotlin.contracts.ExperimentalContracts
 
 // TODO configs from https://htmx.org/docs/#config
