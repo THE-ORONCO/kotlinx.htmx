@@ -1,8 +1,8 @@
 package the.oronco.htmx
 
+import kotlinx.css.i
 import kotlinx.html.Tag
 import org.intellij.lang.annotations.Language
-import java.awt.image.ImageObserver.ABORT
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 
@@ -13,6 +13,7 @@ import kotlin.time.Duration
  **/
 
 fun interface HxValue {
+    // todo make this a value with getter
     fun display(): String // TODO think about sanitization
 }
 
@@ -94,10 +95,10 @@ private fun initSwap(style: SwapStyle, modifiers: HxSwap.() -> Unit): HxSwap{
 
 interface HxSwap : HxValue, HxSwapOob {
     val swapStyle: SwapStyle
-    var modifiers : MutableMap<KClass<out Modifier>, Modifier>
-    override fun display(): String = "${this.swapStyle.representation} ${this.modifiers.values.joinToString(" ", transform = Modifier::display)}"
+    var modifiers : MutableMap<KClass<out SwapModifier>, SwapModifier>
+    override fun display(): String = "${this.swapStyle.representation} ${this.modifiers.values.joinToString(" ", transform = SwapModifier::display)}"
 
-    private fun  addModifier(modifier: Modifier): HxSwap {
+    private fun  addModifier(modifier: SwapModifier): HxSwap {
         this.modifiers[modifier.javaClass.kotlin] = modifier
         return this
     }
@@ -120,9 +121,9 @@ interface HxSwap : HxValue, HxSwapOob {
 
 private data class HxSwapImpl(
     override val swapStyle: SwapStyle,
-    override var modifiers: MutableMap<KClass<out Modifier>, Modifier>
+    override var modifiers: MutableMap<KClass<out SwapModifier>, SwapModifier>
 ) : HxSwap {
-    override fun display(): String = "${this.swapStyle.representation} ${this.modifiers.values.joinToString(" ", transform = Modifier::display)}"
+    override fun display(): String = "${this.swapStyle.representation} ${this.modifiers.values.joinToString(" ", transform = SwapModifier::display)}"
 }
 
 enum class SwapStyle(val representation: String){
@@ -137,15 +138,15 @@ enum class SwapStyle(val representation: String){
     NONE("none"),
 }
 
-sealed interface Modifier : HxValue
+sealed interface SwapModifier : HxValue
 
-data class Transition(val shouldTransition: Boolean): Modifier{
+data class Transition(val shouldTransition: Boolean): SwapModifier {
     override fun display(): String = "transition:${shouldTransition}"
 }
-data class Swap(val delay: HxDuration) : Modifier{
+data class Swap(val delay: HxDuration) : SwapModifier {
     override fun display(): String = "swap:${delay.display()}"
 }
-data class Settle(val delay: HxDuration) : Modifier {
+data class Settle(val delay: HxDuration) : SwapModifier {
     override fun display(): String = "settle:${delay.display()}"
 }
 
@@ -164,18 +165,20 @@ interface HxDuration : HxValue {
 fun Number.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this.toDouble())
 fun Duration.asHxDuration(): HxDuration = HxDuration.MilliSeconds(this.inWholeMilliseconds.toDouble())
 
-data class IgnoreTitle(val ignoreTitle: Boolean): Modifier {
+data class IgnoreTitle(val ignoreTitle: Boolean): SwapModifier {
     override fun display(): String = "ignoreTitle:${ignoreTitle}"
 }
 
-data class Scroll(@Language(value = "CSS", prefix = ":is(", suffix = ")") val target: CssSelector? = null, val verticalLocation: VerticalLocation) : Modifier {
+data class Scroll(@Language(value = "CSS", prefix = ":is(", suffix = ")") val target: CssSelector? = null, val verticalLocation: VerticalLocation) :
+    SwapModifier {
     override fun display(): String = when {
         target != null -> "scroll:${target}:${verticalLocation.representation}"
         else -> "scroll:${verticalLocation.representation}"
     }
 }
 
-data class Show(@Language(value = "CSS", prefix = ":is(", suffix = ")") val target: CssSelector? = null, val verticalLocation: VerticalLocation) : Modifier {
+data class Show(@Language(value = "CSS", prefix = ":is(", suffix = ")") val target: CssSelector? = null, val verticalLocation: VerticalLocation) :
+    SwapModifier {
     override fun display(): String = when {
         target != null -> "show:${target}:${verticalLocation.representation}"
         else -> "show:${verticalLocation.representation}"
@@ -187,7 +190,7 @@ enum class VerticalLocation(val representation: String) {
     NONE("none"),
 }
 
-data class FocusScroll(val doFocusScroll: Boolean): Modifier {
+data class FocusScroll(val doFocusScroll: Boolean): SwapModifier {
     override fun display(): String = "focus-scroll:${doFocusScroll}"
 }
 
@@ -233,7 +236,8 @@ sealed interface HxTarget: HxValue
 data class HxTargetCss(@Language(value = "CSS", prefix = ":is(", suffix = ")") val cssSelector: CssSelector) : HxTarget {
     override fun display(): String = cssSelector
 }
-class HxTargetThis: HxTarget{
+
+data object HxTargetThis : HxTarget {
     override fun display(): String = "this"
 }
 
@@ -255,7 +259,7 @@ data class HxTargetPrevious(@Language(value = "CSS", prefix = ":is(", suffix = "
     }
 }
 fun targetCss(@Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector) = HxTargetCss(cssSelector)
-val targetThis = HxTargetThis()
+val targetThis = HxTargetThis
 fun targetClosest(@Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector) = HxTargetClosest(cssSelector)
 fun targetFind(@Language(value = "CSS", prefix = ":is(", suffix = ")") cssSelector: CssSelector) = HxTargetFind(cssSelector)
 val targetNext = HxTargetNext(null)
@@ -271,6 +275,83 @@ var Tag.hxTrigger : String?
 
 // https://htmx.org/attributes/hx-vals/
 private const val HX_VALS = "hx-vals" // TODO cleaner syntax than using strings possible?
-var Tag.hxVals : String?
-    get() = attributes[HX_VALS]
-    set(newValue) { if (newValue != null) { attributes[HX_VALS] = newValue } }
+var Tag.hxVals : List<HxTrigger>?
+    get() = null // todo implement list parsing
+    set(newValue) {
+        if (newValue != null) {
+            attributes[HX_VALS] = newValue.joinToString { it.display()}
+        }
+    }
+
+
+// TODO get inspiration from https://github.com/IodeSystems/kotlinx-htmx
+sealed interface HxTrigger: HxValue {
+    val filter: String
+    val modifiers: List<EventModifier>
+}
+sealed interface EventModifier: HxValue
+data object Once : EventModifier {
+    override fun display(): String = "once"
+}
+data object Changed : EventModifier {
+    override fun display(): String = "changed"
+}
+data class Delay(val delay: String) : EventModifier {
+    override fun display(): String = "delay:$delay"
+}
+data class Throttle(val throttle: String) : EventModifier {
+    override fun display(): String = "throttle:$throttle"
+}
+data class From(val selector: HxTarget) : EventModifier {
+    override fun display(): String = "throttle:${selector.display()}"
+}
+data class Target(@Language(value = "CSS", prefix = ":is(", suffix = ")") val cssSelector: CssSelector) : EventModifier {
+    override fun display(): String = "throttle:$cssSelector"
+}
+data object Consume : EventModifier {
+    override fun display(): String = "consume"
+}
+data class Queue(val option: QueueOption) : EventModifier {
+    override fun display(): String = "queue:${option.name}"
+}
+enum class QueueOption {
+    first,
+    last,
+    all,
+    none,
+}
+
+
+data class Event(
+    val event: String,
+    override val filter: String = "",
+    override val modifiers: List<EventModifier> = listOf()
+) : HxTrigger {
+    override fun display(): String {
+        var result = event
+        if (filter.isNotEmpty()) {
+            result += "[$filter]"
+        }
+        if (modifiers.isNotEmpty()) {
+            result += modifiers.joinToString(" ") { it.display() }
+        }
+        return result
+    }
+}
+
+data class Polling(
+    val interval: String, // is there a specific format?
+    override val filter: String = "",
+    override val modifiers: List<EventModifier> = listOf()
+) : HxTrigger {
+    override fun display(): String {
+        var result = "every $interval"
+        if (filter.isNotEmpty()) {
+            result += "[$filter]"
+        }
+        if (modifiers.isNotEmpty()) {
+            result += modifiers.joinToString(" ") { it.display() }
+        }
+        return result
+    }
+}

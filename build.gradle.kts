@@ -4,8 +4,8 @@ val kotlin_version: String by project
 val logback_version: String by project
 
 plugins {
-    kotlin("jvm") version "2.0.21"
-    id("io.ktor.plugin") version "3.0.0"
+    kotlin("jvm") version "2.1.0"
+    id("io.ktor.plugin") version "3.0.2"
 }
 
 group = "the.oronco"
@@ -60,10 +60,8 @@ dependencies {
     // webjars
     // TODO get rid of java dependencies so that I can run this server completely natively (see https://ktor.io/docs/server-native.html#native-target)
     implementation("io.ktor:ktor-server-webjars-jvm")
-    implementation("org.webjars.npm:htmx.org:2.0.3")
+    implementation("org.webjars.npm:htmx.org:2.0.4")
     implementation("org.webjars:bootstrap:5.3.3")
-    // logging
-    implementation("ch.qos.logback:logback-classic:$logback_version")
     // hints
     compileOnly("org.jetbrains:annotations:26.0.1")
     // testing
