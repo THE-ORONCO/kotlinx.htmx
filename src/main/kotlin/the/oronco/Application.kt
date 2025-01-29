@@ -24,7 +24,7 @@ import java.io.File
 import java.util.*
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "innomes-dev-vm.atr.local", module = Application::module)
+    embeddedServer(Netty, port = 8080, module = Application::module)
         .start(wait = true)
 }
 

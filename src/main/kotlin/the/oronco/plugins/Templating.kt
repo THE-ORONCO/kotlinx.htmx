@@ -1,14 +1,17 @@
 package the.oronco.plugins
 
-import io.ktor.server.application.*
-import io.ktor.server.html.*
-import io.ktor.server.request.*
-import io.ktor.server.routing.*
-import io.ktor.util.*
+import io.ktor.server.application.Application
+import io.ktor.server.html.Placeholder
+import io.ktor.server.html.Template
+import io.ktor.server.html.insert
+import io.ktor.server.html.respondHtmlTemplate
+import io.ktor.server.request.receiveParameters
+import io.ktor.server.routing.get
+import io.ktor.server.routing.put
+import io.ktor.server.routing.routing
+import io.ktor.util.StringValues
 import kotlinx.html.*
 import the.oronco.htmx.*
-import the.oronco.htmx.HtmxEvent.Companion.afterSwap
-import the.oronco.htmx.HtmxEvent.Companion.beforeOnLoad
 import kotlin.contracts.ExperimentalContracts
 
 // TODO configs from https://htmx.org/docs/#config
@@ -140,7 +143,7 @@ class MainPageTemplate: Template<HTML> {
     val content = Placeholder<FlowContent>()
     override fun HTML.apply() {
         head {
-            script(src = "/assets/htmx.org/2.0.3/dist/htmx.min.js") {} // TODO somehow detect version dynamically
+            script(src = "/assets/htmx.org/2.0.4/dist/htmx.min.js") {} // TODO somehow detect version dynamically
             link(rel = "stylesheet", href = "/assets/bootstrap/bootstrap.min.css") {}
         }
         body {

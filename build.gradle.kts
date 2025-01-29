@@ -5,7 +5,7 @@ val logback_version: String by project
 
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("io.ktor.plugin") version "3.0.2"
+    id("io.ktor.plugin") version "3.0.3"
 }
 
 group = "the.oronco"
@@ -18,13 +18,11 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-kotlin{
+kotlin {
     compilerOptions{
         jvmTarget = JvmTarget.JVM_21
     }
-
 }
-
 
 repositories {
     mavenCentral()
@@ -35,7 +33,6 @@ dependencies {
     // ktor core
     // runner
     implementation("io.ktor:ktor-server-core-jvm")
-    implementation("io.ktor:ktor-server-html-builder-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
     // status
     implementation("io.ktor:ktor-server-status-pages")
@@ -55,7 +52,11 @@ dependencies {
     implementation("io.ktor:ktor-server-i18n")
     // html
     implementation("io.ktor:ktor-server-html-builder")
-    implementation("org.jetbrains.kotlin-wrappers:kotlin-css:1.0.0-pre.819")
+    implementation("io.ktor:ktor-server-html-builder-jvm")
+//    implementation("org.jetbrains.kotlin-wrappers:kotlin-css:1.0.0-pre.819")
+    implementation("io.github.allangomes:kotlinwind-css:0.1.0")
+    // logging
+    implementation("ch.qos.logback:logback-classic:$logback_version")
 
     // webjars
     // TODO get rid of java dependencies so that I can run this server completely natively (see https://ktor.io/docs/server-native.html#native-target)

@@ -27,7 +27,7 @@ private class FRAGMENT(override val consumer: TagConsumer<*>) :
 private inline fun <T, C : TagConsumer<T>> C.fragment(crossinline block: FRAGMENT.() -> Unit = {}): T =
     FRAGMENT(this).visitAndFinalize(this, block)
 
-suspend fun <TTemplate : Template<FlowContent>> ApplicationCall.respondFragmentTemplate(
+suspend inline fun <TTemplate : Template<FlowContent>> ApplicationCall.respondFragmentTemplate(
     template: TTemplate,
     status: HttpStatusCode = HttpStatusCode.OK,
     body: TTemplate.() -> Unit

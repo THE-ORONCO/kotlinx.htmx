@@ -1,6 +1,5 @@
 package the.oronco.htmx
 
-import kotlinx.css.i
 import kotlinx.html.Tag
 import org.intellij.lang.annotations.Language
 import kotlin.reflect.KClass
